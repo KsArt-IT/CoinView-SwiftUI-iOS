@@ -9,24 +9,31 @@ import SwiftUI
 
 struct SplashScreen: View {
     @Binding var splash: Bool
-
+    @State var scale: CGFloat = 0.8
+    let time: Double = 1
+    
     var body: some View {
         VStack {
             Spacer()
             Image(.logoApp)
                 .resizable()
                 .scaledToFit()
-                .frame(width: 250, height: 250)
+                .scaleEffect(scale, anchor: .center)
             Text("Coin View")
                 .font(.title)
                 .foregroundStyle(Color.blue)
+                .opacity(scale > 1 ? 0 : 1)
                 .padding(.top)
             Spacer()
             Text("KsArT.pro")
                 .font(.caption)
         }
         .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(2)) {
+            withAnimation(.easeOut(duration: time)) {
+                scale = 0.3
+            }
+            withAnimation(.easeIn(duration: time * 2).delay(time)) {
+                scale = 4
                 splash = false
             }
         }
