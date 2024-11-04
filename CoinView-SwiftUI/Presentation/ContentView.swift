@@ -8,8 +8,17 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State var splash = true
+    
     var body: some View {
-        VStack {
+        if splash {
+            SplashScreen(splash: $splash)
+        } else {
+            NavigationSplitView {
+                EmptyView()
+            } detail: {
+                EmptyView()
+            }
         }
     }
 }
