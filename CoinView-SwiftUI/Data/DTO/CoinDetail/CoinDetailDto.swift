@@ -5,6 +5,7 @@
 //  Created by KsArT on 05.11.2024.
 //
 
+import Foundation
 
 struct CoinDetailDto: Decodable {
     let id: String
@@ -35,7 +36,7 @@ struct CoinDetailDto: Decodable {
 
 extension CoinDetailDto {
 
-    func mapToDomain() -> CoinDetail {
+    func mapToDomain(_ logo: Data? = nil) -> CoinDetail {
         CoinDetail(
             id: self.id,
             name: self.name,
@@ -43,7 +44,7 @@ extension CoinDetailDto {
             rank: self.rank,
             isNew: self.isNew,
             isActive: self.isActive,
-            logo: self.logo ?? "",
+            logo: logo,
             description: self.description,
             firstDataAt: self.firstDataAt ?? "",
             lastDataAt: self.lastDataAt ?? "",
