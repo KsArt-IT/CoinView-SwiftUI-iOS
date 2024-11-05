@@ -13,8 +13,9 @@ final class ServiceLocator {
     private var services: [String: Any] = [:]
 
     private init() {
-        let coinService = CoinNetworkServiceImpl()
-        register(service: CoinRepositoryImpl(service: coinService))
+        let coinService: CoinNetworkService = CoinNetworkServiceImpl()
+        let coinRepository: CoinRepository = CoinRepositoryImpl(service: coinService)
+        register(service: coinRepository)
     }
     
     func register<T>(service: T) {
