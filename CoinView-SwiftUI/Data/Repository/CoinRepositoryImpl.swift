@@ -15,23 +15,14 @@ final class CoinRepositoryImpl: CoinRepository {
     }
     
     func fetchCoins() async -> Result<[Coin], any Error> {
+        print("CoinRepositoryImpl: \(#function)")
         let result: Result<[CoinDto], Error> = await service.fetchData(endpoint: .coins)
         
-        switch result {
+        return switch result {
         case .success(let coinsDto):
-            var coins: [Coin] = []
-            for coinDto in coinsDto {
-                let result: Result<CoinDetailDto, any Error> = await service.fetchData(endpoint: .coin(id: coinDto.id))
-                let logo: Data? = if case .success(let detail) = result {
-                    await fetchLogo(detail.logo)
-                } else {
-                    nil
-                }
-                coins.append(coinDto.mapToDomain(logo))
-            }
-            return .success(coins)
+                .success(coinsDto.map { $0.mapToDomain() })
         case .failure(let error):
-            return .failure(error)
+                .failure(error)
         }
     }
     
