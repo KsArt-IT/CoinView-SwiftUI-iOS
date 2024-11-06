@@ -19,7 +19,7 @@ struct ContentView: View {
                 MainScreen(selection: $selected)
             } detail: {
                 if !selected.isEmpty, let first = selected.first {
-                    Text(first.name)
+                    DetailScreen(coinDetail: first)
                 }
             }
         }

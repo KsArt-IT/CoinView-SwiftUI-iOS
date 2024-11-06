@@ -74,7 +74,7 @@ final class MainViewModel: ObservableObject {
         var newList: [Coin] = []
         var index = self.list.endIndex
         print("MainViewModel: \(#function) get logo: index=\(index), count=\(count)")
-        for _ in 0...count {
+        for _ in 0..<count {
             guard 0..<self.coins.endIndex ~= index else { break }
             let coin = self.coins[index]
             let logo = await fetchCoinDetailAndLogo(coin.id)
