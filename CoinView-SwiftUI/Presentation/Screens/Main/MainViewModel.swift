@@ -10,8 +10,12 @@ import Foundation
 final class MainViewModel: ObservableObject {
     private let repository: CoinRepository? = ServiceLocator.shared.resolve()
     
+    // список, который отображается
     @Published var list: [Coin] = []
+    // весь список для дозагрузки и пагинации
     private var coins: [Coin] = []
+    // детальная информация о coin, загружается для logo и для отображения
+    private var coinsDetail: [CoinDetail] = []
     
     @Published var reloadingState: PaginationState = .none
     
@@ -73,19 +77,22 @@ final class MainViewModel: ObservableObject {
         for _ in 0...count {
             guard 0..<self.coins.endIndex ~= index else { break }
             let coin = self.coins[index]
-            let logo = await fetchLogo(coin.id)
+            let logo = await fetchCoinDetailAndLogo(coin.id)
             newList.append(logo == nil ? coin : coin.copy(logo: logo))
             index += 1
         }
         await addList(newList)
     }
     
-    // MARK: - Loading coin logo picture
-    private func fetchLogo(_ id: String) async -> Data? {
+    // MARK: - Loading coin logo picture and CoinDetail
+    private func fetchCoinDetailAndLogo(_ id: String) async -> Data? {
         print("MainViewModel: \(#function) get logo: \(id)")
         let result = await self.repository?.fetchCoinDetail(id: id)
         switch result {
         case .success(let coinDetail):
+            // добавим в общий список
+            await self.addCoinDetail(coinDetail)
+            // вернем logo
             return coinDetail.logo
         case .failure(let error):
             print("MainViewModel: error: \(error.localizedDescription)")
@@ -93,6 +100,12 @@ final class MainViewModel: ObservableObject {
             break
         }
         return nil
+    }
+    
+    public func getCoinDetail(by id: String) -> CoinDetail? {
+        guard !id.isEmpty else { return nil }
+        
+        return coinsDetail.first(where: { $0.id == id })
     }
     
     // MARK: - List change
@@ -105,6 +118,11 @@ final class MainViewModel: ObservableObject {
     @MainActor
     private func setList(_ newList: [Coin]) {
         self.list = newList
+    }
+    
+    @MainActor
+    private func addCoinDetail(_ coin: CoinDetail) {
+        self.coinsDetail.append(coin)
     }
     
 }

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct MainScreen: View {
     @StateObject var viewModel = MainViewModel()
-    @Binding var selection: Set<String>
+    @Binding var selection: Set<CoinDetail>
     
     var body: some View {
         VStack {
@@ -25,7 +25,9 @@ struct MainScreen: View {
                     CoinView(coin: coin)
                         .onTapGesture {
                             print("select: \(coin.id)")
-                            selection = [coin.id]
+                            if let coinDetail = viewModel.getCoinDetail(by: coin.id) {
+                                selection = [coinDetail]
+                            }
                         }
                     // покажем загрузку и догрузим
                     if viewModel.isLastItemAndMoreDataAvailable(coin) {

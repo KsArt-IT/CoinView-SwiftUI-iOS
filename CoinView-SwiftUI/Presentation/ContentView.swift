@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @State var splash = true
-    @State var selected: Set<String> = []
+    @State var selected: Set<CoinDetail> = []
     
     var body: some View {
         if splash {
@@ -19,7 +19,7 @@ struct ContentView: View {
                 MainScreen(selection: $selected)
             } detail: {
                 if !selected.isEmpty, let first = selected.first {
-                    Text(first)
+                    Text(first.name)
                 }
             }
         }

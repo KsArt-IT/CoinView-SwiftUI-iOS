@@ -7,8 +7,8 @@
 
 import Foundation
 
-public struct CoinDetail {
-    let id: String
+public struct CoinDetail: Identifiable, Hashable  {
+    public let id: String
     let name: String
     let symbol: String
     let rank: Int
