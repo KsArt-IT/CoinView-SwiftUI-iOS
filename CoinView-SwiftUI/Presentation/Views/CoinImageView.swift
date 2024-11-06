@@ -8,10 +8,10 @@
 import SwiftUI
 
 struct CoinImageView: View {
-    var data: Data?
+    let data: Data?
     
     var body: some View {
-        if let data, let image = CIImage(data: data)?.cgImage {
+        if let data, let image = UIImage(data: data)?.cgImage {
             Image(decorative: image, scale: 1.0, orientation: .up)
                 .resizable()
                 .scaledToFit()

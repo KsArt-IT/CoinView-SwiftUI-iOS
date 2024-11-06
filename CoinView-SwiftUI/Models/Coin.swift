@@ -27,4 +27,15 @@ extension Coin {
             logo: nil
         )
     }
+    
+    public func copy(logo: Data? = nil) -> Self {
+        Coin(
+            id: self.id,
+            isActive: self.isActive,
+            name: self.name,
+            rank: self.rank,
+            symbol: self.symbol,
+            logo: logo
+        )
+    }
 }

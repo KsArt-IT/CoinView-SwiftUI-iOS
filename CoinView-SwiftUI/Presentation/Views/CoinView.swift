@@ -9,7 +9,6 @@ import SwiftUI
 
 struct CoinView: View {
     let coin: Coin
-    let action: () -> Void
     
     var body: some View {
         HStack(spacing: 4) {
@@ -33,14 +32,11 @@ struct CoinView: View {
             RoundedRectangle(cornerRadius: Constants.cornerRadius)
                 .stroke(coin.isActive ? .green : .clear, lineWidth: 1)
         )
-        .onTapGesture {
-            action()
-        }
         .listRowInsets(.init(top: 4, leading: 8, bottom: 4, trailing: 8))
         .listRowBackground(Color.clear)
     }
 }
 
 #Preview {
-    CoinView(coin: Coin.instance(by: "Frt")) {}
+    CoinView(coin: Coin.instance(by: "Frt"))
 }

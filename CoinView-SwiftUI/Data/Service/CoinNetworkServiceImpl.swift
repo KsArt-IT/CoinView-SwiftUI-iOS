@@ -51,10 +51,6 @@ private extension CoinNetworkServiceImpl {
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        request.timeoutInterval = 30
-        request.allHTTPHeaderFields = [
-          "accept": "application/json",
-        ]
 
         return request
     }
