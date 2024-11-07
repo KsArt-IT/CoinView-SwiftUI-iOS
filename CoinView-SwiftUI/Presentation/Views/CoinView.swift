@@ -26,7 +26,7 @@ struct CoinView: View {
             Image(systemName: "info.bubble")
         }
         .padding(8)
-        .background(Color.white.opacity(0.3))
+        .background(.backgroundRow)
         .cornerRadius(Constants.cornerRadius)
         .overlay(
             RoundedRectangle(cornerRadius: Constants.cornerRadius)

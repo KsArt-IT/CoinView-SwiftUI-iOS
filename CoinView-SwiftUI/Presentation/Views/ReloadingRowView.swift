@@ -14,16 +14,25 @@ struct ReloadingRowView: View {
     var body: some View {
         VStack {
             switch state {
+            case .none:
+                EmptyView()
+            case .reload:
+                Color.clear
+                    .task {
+                        print("ReloadingRowView: reloading")
+                        reloading()
+                    }
             case .loading:
                 ProgressView()
-                        .frame(maxWidth: .infinity, idealHeight: 50, maxHeight: 100)
-                        .padding(8)
-                        .background(Color.white.opacity(0.3))
-                        .cornerRadius(Constants.cornerRadius)
+                    .progressViewStyle(.circular)
+                    .frame(maxWidth: .infinity, idealHeight: 50, maxHeight: 100)
+                    .padding(8)
+                    .background(Color.backgroundRow)
+                    .cornerRadius(Constants.cornerRadius)
             case .error(let message):
                 HStack {
                     Text(message)
-                        .foregroundStyle(Color.red)
+                        .foregroundStyle(.red)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity, minHeight: 50, maxHeight: 500)
                     Spacer()
@@ -37,15 +46,8 @@ struct ReloadingRowView: View {
                     .buttonStyle(.borderless)
                 }
                 .padding(8)
-                .background(Color.white.opacity(0.3))
+                .background(Color.backgroundRow)
                 .cornerRadius(Constants.cornerRadius)
-            case .none:
-                //EmptyView() // тут не подходит, не происходит дозагрузка
-                Color.clear
-                    .task {
-                        print("ReloadingRowView: reloading")
-                        reloading()
-                    }
             }
         }
         .listRowInsets(.init(top: 4, leading: 8, bottom: 4, trailing: 8))

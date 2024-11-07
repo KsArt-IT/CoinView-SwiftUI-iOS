@@ -25,9 +25,9 @@ enum NetworkError: Error {
             case .statusCode(let code, let message):
                 "Unexpected status code: \(code).\n\(message)"
             case .decodingError(let error):
-                "Decoding failed with error: \(error.localizedDescription)."
+                "Decoding failed with error:\n\(error.localizedDescription)."
             case .networkError(let error):
-                "Network error occurred: \(error.localizedDescription)."
+                "Network error occurred:\n\(error.localizedDescription)."
             case .cancelled:
                 ""
         }

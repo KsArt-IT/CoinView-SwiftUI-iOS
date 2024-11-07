@@ -20,7 +20,7 @@ final class MainViewModel: ObservableObject {
         coins.count > list.count || !isLoaded
     }
     
-    @Published var reloadingState: PaginationState = .none
+    @Published var reloadingState: PaginationState = .reload
     
     // начальная загрузка
     private var isLoaded = false
@@ -44,7 +44,7 @@ final class MainViewModel: ObservableObject {
                 
                 do {
                     try await self?.preloadList(12)
-                    await self?.setReloadingState(.none)
+                    await self?.setReloadingState(.reload)
                 } catch {
                     await self?.showError(error)
                 }
@@ -72,7 +72,7 @@ final class MainViewModel: ObservableObject {
             
             do {
                 try await self?.preloadList()
-                await self?.setReloadingState(.none)
+                await self?.setReloadingState(.reload)
             } catch {
                 await self?.showError(error)
             }
@@ -106,7 +106,11 @@ final class MainViewModel: ObservableObject {
     
     @MainActor
     private func setReloadingState(_ state: PaginationState) {
-        self.reloadingState = state
+        if case .reload = state, !isMoreDataAvailable {
+            self.reloadingState = .none
+        } else {
+            self.reloadingState = state
+        }
     }
     
     // MARK: - Loading coin logo picture and CoinDetail

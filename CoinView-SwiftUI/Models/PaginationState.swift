@@ -10,5 +10,6 @@ import Foundation
 enum PaginationState {
     case none
     case loading
+    case reload
     case error(message: String)
 }
