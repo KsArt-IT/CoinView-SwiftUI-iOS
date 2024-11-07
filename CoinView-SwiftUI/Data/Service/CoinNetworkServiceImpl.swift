@@ -9,7 +9,7 @@ import Foundation
 
 final class CoinNetworkServiceImpl: CoinNetworkService {
     private let decoder = JSONDecoder()
-
+    
     func fetchData<T>(endpoint: CoinEndpoint) async -> Result<T, any Error> where T : Decodable {
         guard let request = getRequest(endpoint.url) else { return .failure(NetworkError.invalidRequest)}
         
@@ -48,17 +48,22 @@ private extension CoinNetworkServiceImpl {
     // MARK: - Dencode - Request - Response
     private func getRequest(_ url: URL?) -> URLRequest? {
         guard let url else { return nil }
-
+        
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-
+        
         return request
     }
-
+    
     private func executeRequest(_ request: URLRequest) async throws -> Data {
         let (data, response) = try await URLSession.shared.data(for: request)
         if let codeError = getCodeErrorFormResponse(response) {
-            throw NetworkError.invalidResponse(code: codeError)
+            let message = if let error: ErrorMsg = try? decode(from: data) {
+                "\(error.softLimit)\n\(error.error)"
+            } else {
+                ""
+            }
+            throw NetworkError.invalidResponse(code: codeError, message: message)
         }
         
         return data
@@ -73,10 +78,10 @@ private extension CoinNetworkServiceImpl {
             httpResponse.statusCode
         }
     }
-
+    
     private func decode<T>(from data: Data) throws -> T where T : Decodable {
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         return try decoder.decode(T.self, from: data)
     }
-
+    
 }

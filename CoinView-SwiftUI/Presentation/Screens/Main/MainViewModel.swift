@@ -30,7 +30,7 @@ final class MainViewModel: ObservableObject {
     public func loadData() {
         guard repository != nil, taskLoading == nil else { return }
         print("MainViewModel: \(#function)")
-
+        
         taskLoading = Task { [weak self] in
             await self?.setReloadingState(.loading)
             
@@ -41,15 +41,15 @@ final class MainViewModel: ObservableObject {
                 print("MainViewModel: coins = \(coins.count)")
                 self?.coins = coins
                 self?.isLoaded = true
-                await self?.preloadList(12)
-                if let list = self?.list, !list.isEmpty {
+                
+                do {
+                    try await self?.preloadList(12)
                     await self?.setReloadingState(.none)
-                } else {
-                    await self?.setReloadingState(.error(message: "Reload"))
+                } catch {
+                    await self?.showError(error)
                 }
             case .failure(let error):
-                print("MainViewModel: coins error: \(error.localizedDescription)")
-                await self?.setReloadingState(.error(message: error.localizedDescription))
+                await self?.showError(error)
             case .none:
                 break
             }
@@ -64,13 +64,43 @@ final class MainViewModel: ObservableObject {
             loadData()
             return
         }
-        guard isMoreDataAvailable else { return }
+        guard isMoreDataAvailable, taskLoading == nil else { return }
         
         print("MainViewModel: \(#function)")
-        Task { [weak self] in
+        taskLoading = Task { [weak self] in
             await self?.setReloadingState(.loading)
-            await self?.preloadList()
-            await self?.setReloadingState(.none)
+            
+            do {
+                try await self?.preloadList()
+                await self?.setReloadingState(.none)
+            } catch {
+                await self?.showError(error)
+            }
+            self?.taskLoading = nil
+        }
+    }
+    
+    private func preloadList(_ count: Int = 3) async throws {
+        var newList: [Coin] = []
+        var index = self.list.endIndex
+        print("MainViewModel: \(#function) get logo: index=\(index), count=\(count)")
+        do {
+            for _ in 0..<count {
+                guard 0..<self.coins.endIndex ~= index else { break }
+                
+                let coin = self.coins[index]
+                
+                let logo = try await fetchCoinDetailAndLogo(coin.id)
+                newList.append(logo == nil ? coin : coin.copy(logo: logo))
+                
+                index += 1
+            }
+            await addList(newList)
+        } catch {
+            // сохраним, если что-то есть
+            await addList(newList)
+            
+            throw error
         }
     }
     
@@ -79,22 +109,8 @@ final class MainViewModel: ObservableObject {
         self.reloadingState = state
     }
     
-    private func preloadList(_ count: Int = 3) async {
-        var newList: [Coin] = []
-        var index = self.list.endIndex
-        print("MainViewModel: \(#function) get logo: index=\(index), count=\(count)")
-        for _ in 0..<count {
-            guard 0..<self.coins.endIndex ~= index else { break }
-            let coin = self.coins[index]
-            let logo = await fetchCoinDetailAndLogo(coin.id)
-            newList.append(logo == nil ? coin : coin.copy(logo: logo))
-            index += 1
-        }
-        await addList(newList)
-    }
-    
     // MARK: - Loading coin logo picture and CoinDetail
-    private func fetchCoinDetailAndLogo(_ id: String) async -> Data? {
+    private func fetchCoinDetailAndLogo(_ id: String) async throws -> Data? {
         print("MainViewModel: \(#function) get logo: \(id)")
         let result = await self.repository?.fetchCoinDetail(id: id)
         switch result {
@@ -104,7 +120,7 @@ final class MainViewModel: ObservableObject {
             // вернем logo
             return coinDetail.logo
         case .failure(let error):
-            print("MainViewModel: error: \(error.localizedDescription)")
+            throw error
         case .none:
             break
         }
@@ -115,6 +131,18 @@ final class MainViewModel: ObservableObject {
         guard !id.isEmpty else { return nil }
         
         return coinsDetail.first(where: { $0.id == id })
+    }
+    
+    // MARK: - Show error
+    @MainActor
+    private func showError(_ error: Error) {
+        print("MainViewModel: coins error: \(error.localizedDescription)")
+        // если это NetworkError то покажем наше сообщение
+        if let error = error as? NetworkError {
+            setReloadingState(.error(message: error.localizedDescription))
+        } else {
+            setReloadingState(.error(message: error.localizedDescription))
+        }
     }
     
     // MARK: - List change
