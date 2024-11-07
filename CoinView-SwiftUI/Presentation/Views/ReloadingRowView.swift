@@ -33,7 +33,13 @@ struct ReloadingRowView: View {
                     .buttonStyle(.borderless)
                 }
             case .none:
-                EmptyView()
+                //EmptyView() // тут не подходит, не происходит дозагрузка
+                Color.clear
+                    .task {
+                        // запускаем загрузку, только если .none
+                        print("ReloadingRowView: reloading")
+                        reloading()
+                    }
             }
         }
         .frame(maxWidth: .infinity, idealHeight: 50, maxHeight: 100)
@@ -42,12 +48,6 @@ struct ReloadingRowView: View {
         .cornerRadius(Constants.cornerRadius)
         .listRowInsets(.init(top: 4, leading: 8, bottom: 4, trailing: 8))
         .listRowBackground(Color.clear)
-        .task {
-            // запускаем загрузку, только если .none
-            if case .none = state {
-                reloading()
-            }
-        }
     }
 }
 
