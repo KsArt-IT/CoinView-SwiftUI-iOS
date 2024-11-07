@@ -16,19 +16,22 @@ final class MainViewModel: ObservableObject {
     private var coins: [Coin] = []
     // детальная информация о coin, загружается для logo и для отображения
     private var coinsDetail: [CoinDetail] = []
+    public var isMoreDataAvailable: Bool {
+        coins.count > list.count || !isLoaded
+    }
     
     @Published var reloadingState: PaginationState = .none
     
-    init() {
-        loadData()
-    }
+    // начальная загрузка
+    private var isLoaded = false
+    private var taskLoading: Task<(), Never>?
     
     // MARK: - Loading
     public func loadData() {
+        guard repository != nil, taskLoading == nil else { return }
         print("MainViewModel: \(#function)")
-        guard repository != nil else { return }
-        
-        Task { [weak self] in
+
+        taskLoading = Task { [weak self] in
             await self?.setReloadingState(.loading)
             
             let result = await self?.repository?.fetchCoins()
@@ -37,7 +40,8 @@ final class MainViewModel: ObservableObject {
             case .success(let coins):
                 print("MainViewModel: coins = \(coins.count)")
                 self?.coins = coins
-                await self?.preloadList(10)
+                self?.isLoaded = true
+                await self?.preloadList(12)
                 if let list = self?.list, !list.isEmpty {
                     await self?.setReloadingState(.none)
                 } else {
@@ -49,15 +53,20 @@ final class MainViewModel: ObservableObject {
             case .none:
                 break
             }
+            self?.taskLoading = nil
         }
     }
     
     // MARK: - Checking the need for additional loading
-    public func isLastItemAndMoreDataAvailable(_ coin: Coin) -> Bool {
-        coins.count > list.count && list.last == coin
-    }
-    
     public func loadMoreItems() {
+        // если не было загружено, то сначало загрузим
+        if !isLoaded {
+            loadData()
+            return
+        }
+        guard isMoreDataAvailable else { return }
+        
+        print("MainViewModel: \(#function)")
         Task { [weak self] in
             await self?.setReloadingState(.loading)
             await self?.preloadList()

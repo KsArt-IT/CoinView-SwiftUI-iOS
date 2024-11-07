@@ -9,35 +9,28 @@ import SwiftUI
 
 struct MainScreen: View {
     @StateObject var viewModel = MainViewModel()
-    @Binding var selection: Set<CoinDetail>
+    @Binding var selection: CoinDetail?
     
     var body: some View {
         VStack {
-            if viewModel.list.isEmpty {
-                List {
-                    ReloadingRowView(state: $viewModel.reloadingState) {
-                        viewModel.loadData()
-                    }
-                }
-                .listStyle(.plain)
-            } else {
-                List(viewModel.list, selection: $selection) { coin in
+            List(selection: $selection) {
+                ForEach(viewModel.list) { coin in
                     CoinView(coin: coin)
                         .onTapGesture {
-                            print("select: \(coin.id)")
                             if let coinDetail = viewModel.getCoinDetail(by: coin.id) {
-                                selection = [coinDetail]
+                                print("select: \(coin.id)")
+                                selection = coinDetail
                             }
                         }
-                    // покажем загрузку и догрузим
-                    if viewModel.isLastItemAndMoreDataAvailable(coin) {
-                        ReloadingRowView(state: $viewModel.reloadingState) {
-                            viewModel.loadMoreItems()
-                        }
+                }
+                // покажем загрузку и догрузим или релоад
+                if viewModel.isMoreDataAvailable {
+                    ReloadingRowView(state: $viewModel.reloadingState) {
+                        viewModel.loadMoreItems()
                     }
                 }
-                .listStyle(.plain)
             }
+            .listStyle(.plain)
         }
         // MARK: - Navigation
         .navigationTitle("Coins")
@@ -50,6 +43,6 @@ struct MainScreen: View {
 
 #Preview {
     NavigationView {
-        MainScreen(selection: .constant([]))
+        MainScreen(selection: .constant(nil))
     }
 }
