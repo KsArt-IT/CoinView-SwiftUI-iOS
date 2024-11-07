@@ -16,15 +16,19 @@ struct ReloadingRowView: View {
             switch state {
             case .loading:
                 ProgressView()
+                        .frame(maxWidth: .infinity, idealHeight: 50, maxHeight: 100)
+                        .padding(8)
+                        .background(Color.white.opacity(0.3))
+                        .cornerRadius(Constants.cornerRadius)
             case .error(let message):
                 HStack {
                     Text(message)
                         .foregroundStyle(Color.red)
-                        .lineLimit(3)
                         .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
+                        .frame(maxWidth: .infinity, minHeight: 50, maxHeight: 500)
                     Spacer()
                     Button {
+                        print("ReloadingRowView: Button reloading")
                         reloading()
                     } label: {
                         Image(systemName: "arrow.clockwise.circle")
@@ -32,22 +36,21 @@ struct ReloadingRowView: View {
                     }
                     .buttonStyle(.borderless)
                 }
+                .padding(8)
+                .background(Color.white.opacity(0.3))
+                .cornerRadius(Constants.cornerRadius)
             case .none:
                 //EmptyView() // тут не подходит, не происходит дозагрузка
                 Color.clear
                     .task {
-                        // запускаем загрузку, только если .none
                         print("ReloadingRowView: reloading")
                         reloading()
                     }
             }
         }
-        .frame(maxWidth: .infinity, idealHeight: 50, maxHeight: 100)
-        .padding(8)
-        .background(Color.white.opacity(0.3))
-        .cornerRadius(Constants.cornerRadius)
         .listRowInsets(.init(top: 4, leading: 8, bottom: 4, trailing: 8))
         .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
     }
 }
 
