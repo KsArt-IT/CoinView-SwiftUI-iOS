@@ -15,11 +15,19 @@ struct ContentView: View {
         if splash {
             SplashScreen(splash: $splash)
         } else {
-            NavigationSplitView(columnVisibility: .constant(.all)) {
+            NavigationSplitView(columnVisibility: .constant(.doubleColumn)) {
                 MainScreen(selection: $selected)
             } detail: {
                 if let selected {
                     DetailScreen(coinDetail: selected)
+                } else {
+                    Text("Select coin\nfrom the list")
+                        .font(.largeTitle)
+                        .padding(.leading, 32)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background {
+                            BackgroundView(main: false)
+                        }
                 }
             }
         }

@@ -52,7 +52,7 @@ struct DetailScreen: View {
         .padding(.horizontal, 8)
         .padding(.bottom, 8)
         .background {
-            BackgroundView()
+            BackgroundView(main: false)
         }
     }
 }

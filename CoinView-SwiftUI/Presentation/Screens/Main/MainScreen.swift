@@ -36,7 +36,7 @@ struct MainScreen: View {
         .navigationTitle("Coins")
         .navigationBarTitleDisplayMode(.inline)
         .background {
-            BackgroundView()
+            BackgroundView(main: true)
         }
     }
 }

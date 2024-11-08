@@ -2,7 +2,7 @@
   "images" : [
     {
       "filename" : "crypto-city.jpg",
-      "idiom" : "universal"
+      "idiom" : "iphone"
     },
     {
       "appearances" : [
@@ -12,7 +12,21 @@
         }
       ],
       "filename" : "crypto-coin.jpg",
-      "idiom" : "universal"
+      "idiom" : "iphone"
+    },
+    {
+      "filename" : "mainCoin2.jpg",
+      "idiom" : "ipad"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "dark"
+        }
+      ],
+      "filename" : "maincoin22.jpg",
+      "idiom" : "ipad"
     }
   ],
   "info" : {
