@@ -9,12 +9,16 @@ import Foundation
 
 final class ServiceLocator {
     static let shared = ServiceLocator()
-
+    
     private var services: [String: Any] = [:]
-
+    
     private init() {
+        // Network service
         let coinService: CoinNetworkService = CoinNetworkServiceImpl()
-        let coinRepository: CoinRepository = CoinRepositoryImpl(service: coinService)
+        // Data service
+        let coinDataService: CoinDataService = CoinDataServiceImpl()
+        // Repository
+        let coinRepository: CoinRepository = CoinRepositoryImpl(network: coinService, data: coinDataService)
         register(service: coinRepository)
     }
     
@@ -22,10 +26,10 @@ final class ServiceLocator {
         let key = "\(T.self)"
         services[key] = service
     }
-
+    
     func resolve<T>() -> T? {
         let key = "\(T.self)"
         return services[key] as? T
     }
-
+    
 }

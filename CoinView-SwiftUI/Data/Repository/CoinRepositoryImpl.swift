@@ -8,39 +8,81 @@
 import Foundation
 
 final class CoinRepositoryImpl: CoinRepository {
-    private let service: CoinNetworkService
+    private let networkService: CoinNetworkService
+    private let dataService: CoinDataService
     
-    init(service: CoinNetworkService) {
-        self.service = service
+    init(network: CoinNetworkService, data: CoinDataService) {
+        self.networkService = network
+        self.dataService = data
     }
     
+    // MARK: - Download list of coins from network or data
     func fetchCoins() async -> Result<[Coin], any Error> {
         print("CoinRepositoryImpl: \(#function)")
-        let result: Result<[CoinDto], Error> = await service.fetchData(endpoint: .coins)
+        let result: Result<[CoinDto], Error> = await networkService.fetchData(endpoint: .coins)
         
-        return switch result {
+        switch result {
         case .success(let coinsDto):
-                .success(coinsDto.map { $0.mapToDomain() })
+            
+            self.saveData(coinsDto)
+
+            return .success(coinsDto.map { $0.mapToDomain() })
         case .failure(let error):
-                .failure(error)
+
+            if let coinModel = dataService.fetchData() {
+                debugPrint("CoinRepositoryImpl: \(#function) dataService")
+                return .success(coinModel.map { $0.mapToDomain() })
+            } else {
+                return .failure(error)
+            }
         }
     }
     
+    // MARK: - Download coin detail from data or network
     func fetchCoinDetail(id: String) async -> Result<CoinDetail, any Error> {
-        let result: Result<CoinDetailDto, any Error> = await service.fetchData(endpoint: .coin(id: id))
+        if let coin = dataService.fetchData(by: id) {
+            print("CoinRepositoryImpl: \(#function) dataService")
+            return .success(coin.mapToDomain())
+        }
+        print("CoinRepositoryImpl: \(#function) networkService")
+        let result: Result<CoinDetailDto, any Error> = await networkService.fetchData(endpoint: .coin(id: id))
         
         switch result {
         case .success(let dto):
             let logo = await fetchLogo(dto.logo)
-            return .success(dto.mapToDomain(logo))
+            let coin = dto.mapToModel(logo)
+            dataService.saveData(coin)
+            return .success(coin.mapToDomain())
         case .failure(let error):
             return .failure(error)
         }
     }
     
+    // MARK: - Download coin logo from network
     private func fetchLogo(_ url: String?) async -> Data? {
         guard let url else { return nil }
         
-        return await service.fetchData(url: url)
+        return await networkService.fetchData(url: url)
+    }
+    
+    // MARK: - Save coin to data
+    private func saveData(_ coinsDto: [CoinDto]) {
+        guard !coinsDto.isEmpty else { return }
+        debugPrint("CoinRepositoryImpl: \(#function) saveData: coinsDto")
+
+        Task { [weak self] in
+            // получим информацию
+            let info = self?.dataService.fetchInfo()
+            // если количество разное
+            if info == nil || info?.count != coinsDto.count {
+                let coinsModel = coinsDto.map { $0.mapToModel() }
+                self?.dataService.saveData(coinsModel)
+            }
+        }
+    }
+    
+    func saveData(_ coin: Coin) async {
+        debugPrint("CoinRepositoryImpl: \(#function) saveData: coin")
+        dataService.saveData(coin.mapToModel())
     }
 }
