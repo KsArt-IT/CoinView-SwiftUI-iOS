@@ -90,10 +90,18 @@ final class MainViewModel: ObservableObject {
                 
                 let coin = self.coins[index]
                 
-                let logo = try await fetchCoinDetailAndLogo(coin.id)
-                newList.append(logo == nil ? coin : coin.copy(logo: logo))
+                let coinWithLogo = if let logo = try await fetchCoinDetailAndLogo(coin.id) {
+                    coin.copy(logo: logo)
+                } else {
+                    coin
+                }
                 
+                // добавим в список
+                newList.append(coinWithLogo)
                 index += 1
+                
+                // сохраним в базу
+                saveData(coinWithLogo)
             }
             await addList(newList)
         } catch {
@@ -101,6 +109,12 @@ final class MainViewModel: ObservableObject {
             await addList(newList)
             
             throw error
+        }
+    }
+    
+    private func saveData(_ coin: Coin) {
+        Task { [weak self] in
+            await self?.repository?.saveData(coin)
         }
     }
     
