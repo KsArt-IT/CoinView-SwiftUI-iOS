@@ -29,4 +29,15 @@ extension CoinDto {
             logo: logo
         )
     }
+
+    func mapToModel() -> CoinModel {
+        CoinModel(
+            id: self.id,
+            isActive: self.isActive,
+            name: self.name,
+            rank: self.rank,
+            symbol: self.symbol,
+            logo: nil
+        )
+    }
 }

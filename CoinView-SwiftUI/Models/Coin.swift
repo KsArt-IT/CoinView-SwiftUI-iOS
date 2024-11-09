@@ -17,7 +17,7 @@ struct Coin: Identifiable, Hashable {
 }
 
 extension Coin {
-    static func instance(by name: String) -> Coin {
+    static func instance(by name: String) -> Self {
         Coin(
             id: UUID().uuidString,
             isActive: true,
@@ -36,6 +36,17 @@ extension Coin {
             rank: self.rank,
             symbol: self.symbol,
             logo: logo
+        )
+    }
+    
+    public func mapToModel() -> CoinModel {
+        CoinModel(
+            id: self.id,
+            isActive: self.isActive,
+            name: self.name,
+            rank: self.rank,
+            symbol: self.symbol,
+            logo: logo == nil ? nil : CoinLogoModel(id: self.id, data: self.logo!)
         )
     }
 }

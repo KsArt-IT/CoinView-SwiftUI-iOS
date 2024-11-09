@@ -53,4 +53,22 @@ extension CoinDetailDto {
             team: self.team.map { "\($0.name) - \($0.position)" }
         )
     }
+
+    func mapToModel(_ logo: Data? = nil) -> CoinDetailModel {
+        CoinDetailModel(
+            id: self.id,
+            name: self.name,
+            symbol: self.symbol,
+            rank: self.rank,
+            isNew: self.isNew,
+            isActive: self.isActive,
+            descript: self.description,
+            firstDataAt: self.firstDataAt ?? "",
+            lastDataAt: self.lastDataAt ?? "",
+            message: self.message ?? "",
+            tags: self.tags.map { $0.name },
+            team: self.team.map { "\($0.name) - \($0.position)" },
+            logo: logo == nil ? nil : CoinLogoModel(id: self.id, data: logo!)
+        )
+    }
 }
