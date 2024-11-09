@@ -17,19 +17,19 @@ final class CoinDetailModel {
     var rank: Int
     var isNew: Bool
     var isActive: Bool
-
+    
     var descript: String
     var firstDataAt: String
     var lastDataAt: String
     var message: String
-
+    
     var tags: [String]
     var team: [String]
-
+    
     // Связь с CoinLogoModel
     @Relationship(deleteRule: .nullify)
     var logo: CoinLogoModel?
-
+    
     init(
         id: String,
         name: String,
@@ -42,7 +42,8 @@ final class CoinDetailModel {
         lastDataAt: String,
         message: String,
         tags: [String] = [],
-        team: [String] = []
+        team: [String] = [],
+        logo: CoinLogoModel? = nil
     ) {
         self.id = id
         self.name = name
@@ -56,6 +57,7 @@ final class CoinDetailModel {
         self.message = message
         self.tags = tags
         self.team = team
+        self.logo = logo
     }
 }
 

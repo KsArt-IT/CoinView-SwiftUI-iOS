@@ -11,9 +11,11 @@ import SwiftData
 @Model
 final class CoinLogoModel {
     @Attribute(.unique)
-    var data: Data
-
-    init(data: Data) {
+    var id: String?
+    var data: Data?
+    
+    init(id: String, data: Data) {
+        self.id = id
         self.data = data
     }
 }

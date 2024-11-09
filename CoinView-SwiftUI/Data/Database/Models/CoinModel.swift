@@ -19,13 +19,14 @@ final class CoinModel {
     // Связь с CoinLogoModel
     @Relationship(deleteRule: .nullify)
     var logo: CoinLogoModel?
-
-    init(id: String, isActive: Bool, name: String, rank: Int, symbol: String) {
+    
+    init(id: String, isActive: Bool, name: String, rank: Int, symbol: String, logo: CoinLogoModel? = nil) {
         self.id = id
         self.isActive = isActive
         self.name = name
         self.rank = rank
         self.symbol = symbol
+        self.logo = logo
     }
 }
 
