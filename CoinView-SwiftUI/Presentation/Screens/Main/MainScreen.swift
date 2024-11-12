@@ -33,6 +33,19 @@ struct MainScreen: View {
         // MARK: - Navigation
         .navigationTitle("Coins")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .bottomBar) {
+                HStack {
+                    Text(viewModel.list.count.description)
+                        .frame(width: 60)
+                        .padding(.horizontal)
+                    ProgressView(value: viewModel.progressLoaded)
+                        .progressViewStyle(LinearProgressViewStyle())
+                        .padding(.trailing)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+        }
         .background {
             BackgroundView(main: true)
         }

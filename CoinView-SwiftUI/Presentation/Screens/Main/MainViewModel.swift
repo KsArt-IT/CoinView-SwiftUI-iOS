@@ -18,6 +18,10 @@ final class MainViewModel: ObservableObject {
         count > list.count || !isLoaded
     }
     
+    public var progressLoaded: Double {
+        list.isEmpty ? 0.0 : Double(list.count) / Double(count)
+    }
+    
     @Published var reloadingState: PaginationState = .reload
     
     // начальная загрузка
@@ -74,7 +78,7 @@ final class MainViewModel: ObservableObject {
     }
     
     private func preloadList(_ count: Int = 3) async {
-        var index = self.list.endIndex
+        let index = self.list.endIndex
         print("MainViewModel: \(#function) get logo: index=\(index), count=\(count)")
         let result = await repository?.fetchCoins(index: index, count: count)
         switch result {
