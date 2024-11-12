@@ -13,11 +13,9 @@ final class MainViewModel: ObservableObject {
     // список, который отображается
     @Published var list: [Coin] = []
     // весь список для дозагрузки и пагинации
-    private var coins: [Coin] = []
-    // детальная информация о coin, загружается для logo и для отображения
-    private var coinsDetail: [CoinDetail] = []
+    private var count: Int = 0
     public var isMoreDataAvailable: Bool {
-        coins.count > list.count || !isLoaded
+        count > list.count || !isLoaded
     }
     
     @Published var reloadingState: PaginationState = .reload
@@ -26,28 +24,27 @@ final class MainViewModel: ObservableObject {
     private var isLoaded = false
     private var taskLoading: Task<(), Never>?
     
+    init() {
+        preloadData()
+    }
+    
     // MARK: - Loading
-    public func loadData() {
+    public func preloadData() {
         guard repository != nil, taskLoading == nil else { return }
         print("MainViewModel: \(#function)")
         
         taskLoading = Task { [weak self] in
             await self?.setReloadingState(.loading)
             
-            let result = await self?.repository?.fetchCoins()
+            let result = await self?.repository?.fetchData()
             
             switch result {
-            case .success(let coins):
-                print("MainViewModel: coins = \(coins.count)")
-                self?.coins = coins
+            case .success(let count):
+                print("MainViewModel: count = \(count)")
+                self?.count = count
                 self?.isLoaded = true
                 
-                do {
-                    try await self?.preloadList(12)
-                    await self?.setReloadingState(.reload)
-                } catch {
-                    await self?.showError(error)
-                }
+                await self?.setReloadingState(.reload)
             case .failure(let error):
                 await self?.showError(error)
             case .none:
@@ -61,7 +58,7 @@ final class MainViewModel: ObservableObject {
     public func loadMoreItems() {
         // если не было загружено, то сначало загрузим
         if !isLoaded {
-            loadData()
+//            fetchData()
             return
         }
         guard isMoreDataAvailable, taskLoading == nil else { return }
@@ -70,51 +67,23 @@ final class MainViewModel: ObservableObject {
         taskLoading = Task { [weak self] in
             await self?.setReloadingState(.loading)
             
-            do {
-                try await self?.preloadList()
-                await self?.setReloadingState(.reload)
-            } catch {
-                await self?.showError(error)
-            }
+            await self?.preloadList()
+            await self?.setReloadingState(.reload)
             self?.taskLoading = nil
         }
     }
     
-    private func preloadList(_ count: Int = 3) async throws {
-        var newList: [Coin] = []
+    private func preloadList(_ count: Int = 3) async {
         var index = self.list.endIndex
         print("MainViewModel: \(#function) get logo: index=\(index), count=\(count)")
-        do {
-            for _ in 0..<count {
-                guard 0..<self.coins.endIndex ~= index else { break }
-                
-                let coin = self.coins[index]
-                
-                let coinWithLogo = if let logo = try await fetchCoinDetailAndLogo(coin.id) {
-                    coin.copy(logo: logo)
-                } else {
-                    coin
-                }
-                
-                // добавим в список
-                newList.append(coinWithLogo)
-                index += 1
-                
-                // сохраним в базу
-                saveData(coinWithLogo)
-            }
-            await addList(newList)
-        } catch {
-            // сохраним, если что-то есть
-            await addList(newList)
-            
-            throw error
-        }
-    }
-    
-    private func saveData(_ coin: Coin) {
-        Task { [weak self] in
-            await self?.repository?.saveData(coin)
+        let result = await repository?.fetchCoins(index: index, count: count)
+        switch result {
+        case .success(let coins):
+            await addList(coins)
+        case .failure(let error):
+            await showError(error)
+        case .none:
+            break
         }
     }
     
@@ -125,30 +94,6 @@ final class MainViewModel: ObservableObject {
         } else {
             self.reloadingState = state
         }
-    }
-    
-    // MARK: - Loading coin logo picture and CoinDetail
-    private func fetchCoinDetailAndLogo(_ id: String) async throws -> Data? {
-        print("MainViewModel: \(#function) get logo: \(id)")
-        let result = await self.repository?.fetchCoinDetail(id: id)
-        switch result {
-        case .success(let coinDetail):
-            // добавим в общий список
-            await self.addCoinDetail(coinDetail)
-            // вернем logo
-            return coinDetail.logo
-        case .failure(let error):
-            throw error
-        case .none:
-            break
-        }
-        return nil
-    }
-    
-    public func getCoinDetail(by id: String) -> CoinDetail? {
-        guard !id.isEmpty else { return nil }
-        
-        return coinsDetail.first(where: { $0.id == id })
     }
     
     // MARK: - Show error
@@ -173,11 +118,6 @@ final class MainViewModel: ObservableObject {
     @MainActor
     private func setList(_ newList: [Coin]) {
         self.list = newList
-    }
-    
-    @MainActor
-    private func addCoinDetail(_ coin: CoinDetail) {
-        self.coinsDetail.append(coin)
     }
     
 }

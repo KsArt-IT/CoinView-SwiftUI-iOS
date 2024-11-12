@@ -9,7 +9,7 @@ import SwiftUI
 
 struct MainScreen: View {
     @StateObject var viewModel = MainViewModel()
-    @Binding var selection: CoinDetail?
+    @Binding var selection: String?
     
     var body: some View {
         VStack {
@@ -17,10 +17,8 @@ struct MainScreen: View {
                 ForEach(viewModel.list) { coin in
                     CoinView(coin: coin)
                         .onTapGesture {
-                            if let coinDetail = viewModel.getCoinDetail(by: coin.id) {
-                                print("select: \(coin.id)")
-                                selection = coinDetail
-                            }
+                            print("select: \(coin.id)")
+                            selection = coin.id
                         }
                 }
                 // покажем загрузку и догрузим или релоад
