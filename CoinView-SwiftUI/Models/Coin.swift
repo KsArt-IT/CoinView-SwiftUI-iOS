@@ -46,7 +46,7 @@ extension Coin {
             name: self.name,
             rank: self.rank,
             symbol: self.symbol,
-            logo: logo == nil ? nil : CoinLogoModel(id: self.id, data: self.logo!)
+            logo: self.logo == nil ? nil : CoinLogoModel(id: self.id, data: self.logo!)
         )
     }
 }

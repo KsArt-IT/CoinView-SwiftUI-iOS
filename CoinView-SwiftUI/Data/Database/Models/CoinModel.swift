@@ -5,6 +5,7 @@
 //  Created by KsArT on 08.11.2024.
 //
 
+import Foundation
 import SwiftData
 
 @Model
@@ -33,13 +34,19 @@ final class CoinModel {
 extension CoinModel {
     
     func mapToDomain() -> Coin {
-        Coin(
+        let logo: Data? = if let logo = self.logo, let data = logo.data {
+            data
+        } else {
+            nil
+        }
+        
+        return Coin(
             id: self.id,
             isActive: self.isActive,
             name: self.name,
             rank: self.rank,
             symbol: self.symbol,
-            logo: self.logo?.data
+            logo: logo
         )
     }
 }
