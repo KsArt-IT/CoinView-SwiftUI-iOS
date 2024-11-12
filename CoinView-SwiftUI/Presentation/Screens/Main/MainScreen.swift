@@ -12,7 +12,7 @@ struct MainScreen: View {
     @Binding var selection: String?
     
     var body: some View {
-        VStack {
+        ZStack {
             List(selection: $selection) {
                 ForEach(viewModel.list) { coin in
                     CoinView(coin: coin)
@@ -29,23 +29,21 @@ struct MainScreen: View {
                 }
             }
             .listStyle(.plain)
+            .padding(.bottom, 24)
+            HStack {
+                Text(viewModel.list.count.description)
+                    .frame(width: 60)
+                    .padding(.horizontal)
+                ProgressView(value: viewModel.progressLoaded)
+                    .progressViewStyle(LinearProgressViewStyle())
+                    .padding(.trailing)
+                    .frame(maxWidth: .infinity)
+            }
+            .frame(maxHeight: .infinity, alignment: .bottom)
         }
         // MARK: - Navigation
         .navigationTitle("Coins")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .bottomBar) {
-                HStack {
-                    Text(viewModel.list.count.description)
-                        .frame(width: 60)
-                        .padding(.horizontal)
-                    ProgressView(value: viewModel.progressLoaded)
-                        .progressViewStyle(LinearProgressViewStyle())
-                        .padding(.trailing)
-                        .frame(maxWidth: .infinity)
-                }
-            }
-        }
         .background {
             BackgroundView(main: true)
         }
