@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @State var splash = true
-    @State var selected: CoinDetail?
+    @State var selected: String?
     
     var body: some View {
         if splash {
@@ -19,7 +19,7 @@ struct ContentView: View {
                 MainScreen(selection: $selected)
             } detail: {
                 if let selected {
-                    DetailScreen(coinDetail: selected)
+                    DetailScreen(id: selected)
                 } else {
                     Text("Select coin\nfrom the list")
                         .font(.largeTitle)
