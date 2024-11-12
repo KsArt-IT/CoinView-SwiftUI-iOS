@@ -28,39 +28,6 @@ final class CoinDataServiceImpl: @preconcurrency CoinDataService {
         return context
     }()
     
-    // MARK: - Coin
-    func fetchData() -> [CoinModel]? {
-        let coins = try? context.fetch(FetchDescriptor<CoinModel>())
-        print("CoinDataServiceImpl: fetchData: \(coins?.count ?? 0)")
-        return coins
-    }
-    
-    @MainActor
-    func saveData(_ coin: CoinModel) {
-        context.insert(coin)
-        save()
-    }
-    
-    @MainActor
-    func saveData(_ coins: [CoinModel]) {
-        print("CoinDataServiceImpl: \(#function) Start")
-        print("--------------------------------------------------")
-        for coin in coins {
-            // проверим нужно ли сохранить
-            context.insert(coin)
-        }
-        save()
-        // обновим что занесли в базу
-        saveInfo(coins.count)
-        print("CoinDataServiceImpl: \(#function): Ok \(coins.count)")
-        print("--------------------------------------------------")
-    }
-    
-    func deleteData(_ coin: CoinModel) {
-        context.delete(coin)
-        save()
-    }
-    
     // MARK: - Info
     func fetchInfo() -> InfoModel? {
         let info = try? context.fetch(FetchDescriptor<InfoModel>())
@@ -73,6 +40,55 @@ final class CoinDataServiceImpl: @preconcurrency CoinDataService {
         save()
     }
     
+    // MARK: - Coin
+    func fetchCount<T: PersistentModel>(of entity: T.Type) async -> Int? {
+        let request = FetchDescriptor<T>()
+        
+        do {
+            let count = try context.fetchCount(request)
+            return count
+        } catch {
+            return nil
+        }
+    }
+    
+    func fetchData() -> [CoinModel]? {
+        let coins = try? context.fetch(FetchDescriptor<CoinModel>())
+        print("CoinDataServiceImpl: fetchData: \(coins?.count ?? 0)")
+        return coins
+    }
+    
+    func fetchData(index: Int, count: Int) -> [CoinModel]? {
+        let coinFetch = FetchDescriptor<CoinModel>()
+        let coins = try? context.fetch(coinFetch)
+        print("CoinDataServiceImpl: fetchData: count=\(coins?.count ?? 0)")
+        guard let coins, index < coins.count else { return nil }
+        
+        return Array(coins[index..<min(index + count, coins.count)])
+    }
+    
+    @MainActor
+    func saveData<T: PersistentModel>(_ coin: T) {
+        print("CoinDataServiceImpl: \(#function) type: \(T.self)")
+        context.insert(coin)
+        save()
+    }
+    
+    @MainActor
+    func saveData<T: PersistentModel>(_ coins: [T]) {
+        print("CoinDataServiceImpl: \(#function) Start")
+        print("--------------------------------------------------")
+        for coin in coins {
+            // TODO: проверим нужно ли сохранить
+            context.insert(coin)
+        }
+        save()
+        // обновим что занесли в базу
+        saveInfo(coins.count)
+        print("CoinDataServiceImpl: \(#function): Ok \(coins.count)")
+        print("--------------------------------------------------")
+    }
+    
     // MARK: - CoinDetail
     func fetchData(by id: String) -> CoinDetailModel? {
         let coinFetch = FetchDescriptor<CoinDetailModel>(predicate: #Predicate { coin in
@@ -82,9 +98,19 @@ final class CoinDataServiceImpl: @preconcurrency CoinDataService {
         return coins?.first
     }
     
-    func saveData(_ coin: CoinDetailModel) {
-        print("CoinDataServiceImpl: \(#function)")
-        context.insert(coin)
+    // MARK: - Logo
+    func fetchLogo(by id: String) -> CoinLogoModel? {
+        let logoFetch = FetchDescriptor<CoinLogoModel>(predicate: #Predicate { logo in
+            logo.id == id
+        })
+        let logos = try? context.fetch(logoFetch)
+        return logos?.last
+    }
+    
+    // MARK: - Delete
+    @MainActor
+    func deleteData<T: PersistentModel>(_ coin: T) {
+        context.delete(coin)
         save()
     }
     
