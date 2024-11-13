@@ -68,6 +68,25 @@ final class CoinDataServiceImpl: @preconcurrency CoinDataService {
         return Array(coins[index..<min(index + count, coins.count)])
     }
     
+    func fetchData(filter: String) async -> [CoinModel]? {
+        guard !filter.isEmpty, !Task.isCancelled else { return nil }
+        
+        let coinFetch = FetchDescriptor<CoinModel>(
+            predicate: #Predicate {
+                $0.name.contains(filter) ||
+                $0.symbol.contains(filter)
+            },
+            sortBy: [SortDescriptor(\.index)]
+        )
+        if !Task.isCancelled {
+            let coins = try? context.fetch(coinFetch)
+            print("CoinDataServiceImpl: fetchData: count=\(coins?.count ?? 0)")
+            return coins
+        } else {
+            return nil
+        }
+    }
+    
     @MainActor
     func saveData<T: PersistentModel>(_ coin: T) {
         print("CoinDataServiceImpl: \(#function) type: \(T.self)")
@@ -101,7 +120,7 @@ final class CoinDataServiceImpl: @preconcurrency CoinDataService {
             save(true)
         }
     }
-
+    
     // MARK: - CoinDetail
     func fetchData(by id: String) -> CoinDetailModel? {
         print("CoinDataServiceImpl: \(#function)")

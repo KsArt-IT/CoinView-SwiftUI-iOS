@@ -12,21 +12,35 @@ final class MainViewModel: ObservableObject {
     
     // список, который отображается
     @Published var list: [Coin] = []
+    // начальная загрузка
+    private var isLoaded = false
+    private var taskLoading: Task<(), Never>?
+    
+    // для поиска
+    @Published var search = "" {
+        didSet {
+            updateList()
+        }
+    }
+    @Published var listSearch: [Coin] = []
+    private var taskSearch: Task<(), Never>?
+
     // весь список для дозагрузки и пагинации
     private var count: Int = 0
+    @Published var countLoaded: Int = 0
     public var isMoreDataAvailable: Bool {
         count > list.count || !isLoaded
     }
     
     public var progressLoaded: Double {
-        list.isEmpty ? 0.0 : Double(list.count) / Double(count)
+        if search.isEmpty {
+            list.isEmpty ? 0.0 : Double(list.count) / Double(count)
+        } else {
+            listSearch.isEmpty ? 0.0 : Double(listSearch.count) / Double(count)
+        }
     }
     
     @Published var reloadingState: PaginationState = .reload
-    
-    // начальная загрузка
-    private var isLoaded = false
-    private var taskLoading: Task<(), Never>?
     
     init() {
         preloadData()
@@ -107,6 +121,36 @@ final class MainViewModel: ObservableObject {
         }
     }
     
+    // MARK: - Search
+    private func updateList() {
+        if taskSearch != nil {
+            taskSearch?.cancel()
+            taskSearch = nil
+        }
+        taskSearch = Task {
+            if search.isEmpty {
+                await setListSearch([])
+            } else {
+                await preloadListSearch()
+            }
+            taskSearch = nil
+        }
+    }
+    
+    private func preloadListSearch() async {
+        guard !search.isEmpty else { return }
+        
+        let result = await repository?.fetchCoins(filter: search)
+        switch result {
+        case .success(let coins):
+            await setListSearch(coins)
+        case .failure(_):
+            break
+        case .none:
+            break
+        }
+    }
+    
     // MARK: - List change
     private func addList(_ coins: [Coin]) async {
         guard !coins.isEmpty else { return }
@@ -117,6 +161,20 @@ final class MainViewModel: ObservableObject {
     @MainActor
     private func setList(_ newList: [Coin]) {
         self.list = newList
+        setLoaded()
     }
     
+    @MainActor
+    private func setListSearch(_ newList: [Coin]) {
+        self.listSearch = newList
+        setLoaded()
+    }
+    
+    private func setLoaded() {
+        self.countLoaded = if search.isEmpty {
+            self.list.count
+        } else {
+            self.listSearch.count
+        }
+    }
 }

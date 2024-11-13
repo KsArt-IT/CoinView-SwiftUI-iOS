@@ -52,7 +52,7 @@ final class CoinRepositoryImpl: CoinRepository {
     func fetchCoins(index: Int, count: Int) async -> Result<[Coin], any Error> {
         // загрузить из базы
         let coins = dataService.fetchData(index: index, count: count)
-        guard let coins else { return .failure(NetworkError.cancelled)}
+        guard let coins else { return .failure(NetworkError.cancelled) }
         
         var coinsWithLogo: [Coin] = []
         for coin in coins {
@@ -65,6 +65,14 @@ final class CoinRepositoryImpl: CoinRepository {
             }
         }
         return .success(coinsWithLogo)
+    }
+    
+    func fetchCoins(filter: String) async -> Result<[Coin], any Error> {
+        // загрузить из базы
+        let coins = await dataService.fetchData(filter: filter)
+        guard let coins, !Task.isCancelled else { return .failure(NetworkError.cancelled) }
+        
+        return .success(coins.map { $0.mapToDomain() })
     }
     
     private func isInCache() -> Bool {

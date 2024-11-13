@@ -14,24 +14,34 @@ struct MainScreen: View {
     var body: some View {
         ZStack {
             List(selection: $selection) {
-                ForEach(viewModel.list) { coin in
-                    CoinView(coin: coin)
-                        .onTapGesture {
-                            print("select: \(coin.id)")
-                            selection = coin.id
+                if viewModel.search.isEmpty {
+                    ForEach(viewModel.list) { coin in
+                        CoinView(coin: coin)
+                            .onTapGesture {
+                                print("select: \(coin.id)")
+                                selection = coin.id
+                            }
+                    }
+                    // покажем загрузку и догрузим или релоад
+                    if viewModel.search.isEmpty && viewModel.isMoreDataAvailable {
+                        ReloadingRowView(state: $viewModel.reloadingState) {
+                            viewModel.loadMoreItems()
                         }
-                }
-                // покажем загрузку и догрузим или релоад
-                if viewModel.isMoreDataAvailable {
-                    ReloadingRowView(state: $viewModel.reloadingState) {
-                        viewModel.loadMoreItems()
+                    }
+                } else {
+                    ForEach(viewModel.listSearch) { coin in
+                        CoinView(coin: coin)
+                            .onTapGesture {
+                                print("select: \(coin.id)")
+                                selection = coin.id
+                            }
                     }
                 }
             }
             .listStyle(.plain)
             .padding(.bottom, 24)
             HStack {
-                Text(viewModel.list.count.description)
+                Text(viewModel.countLoaded.description)
                     .frame(width: 60)
                     .padding(.horizontal)
                 ProgressView(value: viewModel.progressLoaded)
@@ -44,6 +54,8 @@ struct MainScreen: View {
         // MARK: - Navigation
         .navigationTitle("Coins")
         .navigationBarTitleDisplayMode(.inline)
+        .searchable(text: $viewModel.search)
+        .autocapitalization(.none)
         .background {
             BackgroundView(main: true)
         }
