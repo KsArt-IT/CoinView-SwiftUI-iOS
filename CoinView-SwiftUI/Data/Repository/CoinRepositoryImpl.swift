@@ -69,10 +69,11 @@ final class CoinRepositoryImpl: CoinRepository {
     
     func fetchCoins(filter: String) async -> Result<[Coin], any Error> {
         // загрузить из базы
-        let coins = await dataService.fetchData(filter: filter)
-        guard let coins, !Task.isCancelled else { return .failure(NetworkError.cancelled) }
-        
-        return .success(coins.map { $0.mapToDomain() })
+        if let coins = await dataService.fetchData(filter: filter) {
+            .success(coins.map { $0.mapToDomain() })
+        } else {
+            .failure(NetworkError.cancelled)
+        }
     }
     
     private func isInCache() -> Bool {

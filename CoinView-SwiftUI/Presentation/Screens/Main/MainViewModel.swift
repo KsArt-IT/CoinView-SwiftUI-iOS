@@ -19,12 +19,12 @@ final class MainViewModel: ObservableObject {
     // для поиска
     @Published var search = "" {
         didSet {
-            updateList()
+            updateSearch()
         }
     }
     @Published var listSearch: [Coin] = []
     private var taskSearch: Task<(), Never>?
-
+    
     // весь список для дозагрузки и пагинации
     private var count: Int = 0
     @Published var countLoaded: Int = 0
@@ -122,32 +122,23 @@ final class MainViewModel: ObservableObject {
     }
     
     // MARK: - Search
-    private func updateList() {
-        if taskSearch != nil {
-            taskSearch?.cancel()
-            taskSearch = nil
-        }
-        taskSearch = Task {
-            if search.isEmpty {
-                await setListSearch([])
-            } else {
-                await preloadListSearch()
+    private func updateSearch() {
+        taskSearch?.cancel()
+        
+        self.taskSearch = Task(priority: .utility) { [weak self] in
+            if let coins = await self?.preloadListSearch(), !Task.isCancelled {
+                await self?.setListSearch(coins)
             }
-            taskSearch = nil
         }
     }
     
-    private func preloadListSearch() async {
-        guard !search.isEmpty else { return }
+    private func preloadListSearch() async -> [Coin]? {
+        guard !search.isEmpty else { return nil }
         
-        let result = await repository?.fetchCoins(filter: search)
-        switch result {
-        case .success(let coins):
-            await setListSearch(coins)
-        case .failure(_):
-            break
-        case .none:
-            break
+        return if case .success(let coins) = await repository?.fetchCoins(filter: search) {
+            coins
+        } else {
+            nil
         }
     }
     
@@ -166,6 +157,7 @@ final class MainViewModel: ObservableObject {
     
     @MainActor
     private func setListSearch(_ newList: [Coin]) {
+        print("MainViewModel: \(#function) filter count=\(newList.count)")
         self.listSearch = newList
         setLoaded()
     }
@@ -176,5 +168,11 @@ final class MainViewModel: ObservableObject {
         } else {
             self.listSearch.count
         }
+    }
+    
+    // MARK: - Cancel
+    deinit {
+        taskSearch?.cancel()
+        taskLoading?.cancel()
     }
 }

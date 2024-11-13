@@ -14,27 +14,19 @@ struct MainScreen: View {
     var body: some View {
         ZStack {
             List(selection: $selection) {
-                if viewModel.search.isEmpty {
-                    ForEach(viewModel.list) { coin in
-                        CoinView(coin: coin)
-                            .onTapGesture {
-                                print("select: \(coin.id)")
-                                selection = coin.id
-                            }
-                    }
-                    // покажем загрузку и догрузим или релоад
-                    if viewModel.search.isEmpty && viewModel.isMoreDataAvailable {
-                        ReloadingRowView(state: $viewModel.reloadingState) {
-                            viewModel.loadMoreItems()
+                ForEach(
+                    viewModel.search.isEmpty ? viewModel.list : viewModel.listSearch
+                ) { coin in
+                    CoinView(coin: coin)
+                        .onTapGesture {
+                            print("select: \(coin.id)")
+                            selection = coin.id
                         }
-                    }
-                } else {
-                    ForEach(viewModel.listSearch) { coin in
-                        CoinView(coin: coin)
-                            .onTapGesture {
-                                print("select: \(coin.id)")
-                                selection = coin.id
-                            }
+                }
+                // покажем загрузку и догрузим или релоад
+                if viewModel.search.isEmpty && viewModel.isMoreDataAvailable {
+                    ReloadingRowView(state: $viewModel.reloadingState) {
+                        viewModel.loadMoreItems()
                     }
                 }
             }

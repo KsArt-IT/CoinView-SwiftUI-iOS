@@ -69,20 +69,22 @@ final class CoinDataServiceImpl: @preconcurrency CoinDataService {
     }
     
     func fetchData(filter: String) async -> [CoinModel]? {
-        guard !filter.isEmpty, !Task.isCancelled else { return nil }
-        
-        let coinFetch = FetchDescriptor<CoinModel>(
-            predicate: #Predicate {
-                $0.name.contains(filter) ||
-                $0.symbol.contains(filter)
-            },
-            sortBy: [SortDescriptor(\.index)]
-        )
-        if !Task.isCancelled {
-            let coins = try? context.fetch(coinFetch)
-            print("CoinDataServiceImpl: fetchData: count=\(coins?.count ?? 0)")
+        guard !filter.isEmpty else { return nil }
+        do {
+            let coinFetch = FetchDescriptor<CoinModel>(
+                predicate: #Predicate {
+                    $0.name.contains(filter) ||
+                    $0.symbol.contains(filter)
+                },
+                sortBy: [SortDescriptor(\.index)]
+            )
+            try Task.checkCancellation()
+            let coins = try context.fetch(coinFetch)
+            try Task.checkCancellation()
+            print("CoinDataServiceImpl: fetchData: filter count=\(coins.count)")
             return coins
-        } else {
+        } catch {
+            print("CoinDataServiceImpl: fetchData: filter nil")
             return nil
         }
     }
