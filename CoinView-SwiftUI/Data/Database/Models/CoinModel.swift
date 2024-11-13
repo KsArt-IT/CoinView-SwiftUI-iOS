@@ -11,6 +11,8 @@ import SwiftData
 @Model
 final class CoinModel {
     @Attribute(.unique)
+    var index: Int
+    @Attribute(.unique)
     var id: String
     var isActive: Bool
     var name: String
@@ -21,7 +23,8 @@ final class CoinModel {
     @Relationship(deleteRule: .nullify)
     var logo: CoinLogoModel?
     
-    init(id: String, isActive: Bool, name: String, rank: Int, symbol: String, logo: CoinLogoModel? = nil) {
+    init(index: Int, id: String, isActive: Bool, name: String, rank: Int, symbol: String, logo: CoinLogoModel? = nil) {
+        self.index = index
         self.id = id
         self.isActive = isActive
         self.name = name
@@ -33,20 +36,27 @@ final class CoinModel {
 
 extension CoinModel {
     
-    func mapToDomain() -> Coin {
-        let logo: Data? = if let logo = self.logo, let data = logo.data {
-            data
-        } else {
-            nil
-        }
-        
-        return Coin(
+    func mapToDomain(logo: Data? = nil) -> Coin {
+        Coin(
             id: self.id,
             isActive: self.isActive,
             name: self.name,
             rank: self.rank,
             symbol: self.symbol,
-            logo: logo
+            logo: logo != nil ? logo : self.logo == nil ? nil : self.logo?.data
         )
     }
+    
+    public func copy(logo: Data? = nil) -> CoinModel {
+        CoinModel(
+            index: self.index,
+            id: self.id,
+            isActive: self.isActive,
+            name: self.name,
+            rank: self.rank,
+            symbol: self.symbol,
+            logo: logo == nil ? nil : CoinLogoModel(id: self.id, data: logo!)
+        )
+    }
+    
 }

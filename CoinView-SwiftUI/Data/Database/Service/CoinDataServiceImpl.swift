@@ -13,7 +13,7 @@ final class CoinDataServiceImpl: @preconcurrency CoinDataService {
     var container: ModelContainer = {
         do {
             let container = try ModelContainer(
-                for: InfoModel.self, CoinModel.self, CoinDetailModel.self,
+                for: InfoModel.self, CoinLogoModel.self, CoinModel.self, CoinDetailModel.self,
                 configurations: ModelConfiguration()
             )
             return container
@@ -59,7 +59,8 @@ final class CoinDataServiceImpl: @preconcurrency CoinDataService {
     }
     
     func fetchData(index: Int, count: Int) -> [CoinModel]? {
-        let coinFetch = FetchDescriptor<CoinModel>()
+        var coinFetch = FetchDescriptor<CoinModel>(sortBy: [SortDescriptor(\.index)])
+        coinFetch.fetchLimit = index + count
         let coins = try? context.fetch(coinFetch)
         print("CoinDataServiceImpl: fetchData: count=\(coins?.count ?? 0)")
         guard let coins, index < coins.count else { return nil }
@@ -89,8 +90,21 @@ final class CoinDataServiceImpl: @preconcurrency CoinDataService {
         print("--------------------------------------------------")
     }
     
+    func updateLogo(by id: String, logo: Data) async {
+        print("CoinDataServiceImpl: \(#function)")
+        let coinFetch = FetchDescriptor<CoinModel>(predicate: #Predicate { coin in
+            coin.id == id
+        })
+        let coins = try? context.fetch(coinFetch)
+        if let coin = coins?.first {
+            coin.logo = CoinLogoModel(id: id, data: logo)
+            save(true)
+        }
+    }
+
     // MARK: - CoinDetail
     func fetchData(by id: String) -> CoinDetailModel? {
+        print("CoinDataServiceImpl: \(#function)")
         let coinFetch = FetchDescriptor<CoinDetailModel>(predicate: #Predicate { coin in
             coin.id == id
         })
@@ -99,12 +113,31 @@ final class CoinDataServiceImpl: @preconcurrency CoinDataService {
     }
     
     // MARK: - Logo
-    func fetchLogo(by id: String) -> CoinLogoModel? {
-        let logoFetch = FetchDescriptor<CoinLogoModel>(predicate: #Predicate { logo in
+    @MainActor
+    func fetchLogo(by id: String) async -> CoinLogoModel? {
+        print("CoinDataServiceImpl: \(#function)")
+        guard await isLogoInitialize() else { return nil }
+        
+        var logoFetch = FetchDescriptor<CoinLogoModel>(predicate: #Predicate { logo in
             logo.id == id
         })
-        let logos = try? context.fetch(logoFetch)
-        return logos?.last
+        logoFetch.fetchLimit = 1
+        do {
+            let logos = try context.fetch(logoFetch)
+            return logos.first
+        } catch {
+            print("CoinDataServiceImpl: \(#function) error: \(error.localizedDescription)")
+            return nil
+        }
+    }
+    
+    private func isLogoInitialize() async -> Bool {
+        do {
+            _ = try context.fetch(FetchDescriptor<CoinLogoModel>())
+            return true
+        } catch {
+            return false
+        }
     }
     
     // MARK: - Delete
@@ -115,12 +148,14 @@ final class CoinDataServiceImpl: @preconcurrency CoinDataService {
     }
     
     // MARK: - Save
-    private func save() {
+    private func save(_ force: Bool = false) {
         do {
-            try context.save()
+            if force || context.hasChanges {
+                try context.save()
+            }
         } catch {
             print("CoinDataServiceImpl: save error: \(error)")
         }
     }
-
+    
 }

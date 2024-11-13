@@ -30,8 +30,9 @@ extension CoinDto {
         )
     }
 
-    func mapToModel() -> CoinModel {
+    func mapToModel(_ index: Int) -> CoinModel {
         CoinModel(
+            index: index,
             id: self.id,
             isActive: self.isActive,
             name: self.name,

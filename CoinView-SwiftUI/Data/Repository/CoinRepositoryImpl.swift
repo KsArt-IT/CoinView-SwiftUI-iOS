@@ -20,19 +20,21 @@ final class CoinRepositoryImpl: CoinRepository {
     func fetchData() async -> Result<Int, any Error> {
         print("CoinRepositoryImpl: \(#function)")
         
-        // из кеша базы
+        // из кеша базы и только количество
         if isInCache(), let count = await dataService.fetchCount(of: CoinModel.self) {
             debugPrint("CoinRepositoryImpl: \(#function) dataService")
             return .success(count)
         }
-        // из сети
+        // из сети возьмем весь список
         let result: Result<[CoinDto], Error> = await networkService.fetchData(endpoint: .coins)
         
         switch result {
         case .success(let coinsDto):
             
-            self.saveData(coinsDto)
-            
+            // сохраняем весь список, но
+            // TODO: необходимо вывести пользователю, что идет полное сохранение в базу
+            await self.saveData(coinsDto)
+            // отдаем только количество
             return .success(coinsDto.count)
         case .failure(let error):
             
@@ -54,14 +56,13 @@ final class CoinRepositoryImpl: CoinRepository {
         
         var coinsWithLogo: [Coin] = []
         for coin in coins {
-            var coinWithLogo = coin.mapToDomain()
-            print("CoinRepositoryImpl: \(#function) logo: \(coinWithLogo.logo)")
-            if coinWithLogo.logo == nil, let logo = await fetchLogo(by: coinWithLogo.id) {
-                coinWithLogo = coinWithLogo.copy(logo: logo)
-                // обновим информацию
-                await saveData(coinWithLogo)
+            print("CoinRepositoryImpl: \(#function) logo: \(coin.logo?.data)")
+            if let logo = coin.logo, logo.data != nil {
+                coinsWithLogo.append(coin.mapToDomain())
+            } else if let data = await fetchLogo(by: coin.id) {
+                await updateLogo(coin.id, logo: data)
+                coinsWithLogo.append(coin.mapToDomain(logo: data))
             }
-            coinsWithLogo.append(coinWithLogo)
         }
         return .success(coinsWithLogo)
     }
@@ -70,7 +71,7 @@ final class CoinRepositoryImpl: CoinRepository {
         // получим информацию
         guard let info = self.dataService.fetchInfo() else { return false }
         
-        return info.count > 0 && Date().timeIntervalSince(info.dateUpdate) < 86400 * 10 // дней
+        return info.count > 0 && Date().timeIntervalSince(info.dateUpdate) < 86400 * 3 // дней
     }
     
     // MARK: - Download coin detail from data or network
@@ -103,11 +104,11 @@ final class CoinRepositoryImpl: CoinRepository {
     }
     
     private func fetchLogo(by id: String) async -> Data? {
-        guard !id.isEmpty else { return nil }
         debugPrint("CoinRepositoryImpl: \(#function) id: \(id)")
-
+        guard !id.isEmpty else { return nil }
+        
         // возьмем из базы
-        if let logo = dataService.fetchLogo(by: id) {
+        if let logo = await dataService.fetchLogo(by: id) {
             return logo.data
         }
         // из CoinDetail
@@ -122,18 +123,26 @@ final class CoinRepositoryImpl: CoinRepository {
     }
     
     // MARK: - Save coin to data
-    private func saveData(_ coinsDto: [CoinDto]) {
+    private func saveData(_ coinsDto: [CoinDto]) async {
         guard !coinsDto.isEmpty else { return }
         debugPrint("CoinRepositoryImpl: \(#function) saveData: coinsDto")
-        
-        Task { [weak self] in
-            let coinsModel = coinsDto.map { $0.mapToModel() }
-            self?.dataService.saveData(coinsModel)
+        // сохраним первый коин с logo и детальной информацией
+        if let coin = coinsDto.first {
+            _ = await fetchCoinDetail(by: coin.id)
         }
+        // добавляем номер по порядку, для сортировки и отображения, как был загружен список
+        let coinsModel = coinsDto.enumerated().map { (index, coin) in
+            coin.mapToModel(index)
+        }
+        self.dataService.saveData(coinsModel)
     }
     
-    private func saveData(_ coin: Coin) async {
-        debugPrint("CoinRepositoryImpl: \(#function) saveData: coin logo=\(coin.logo)")
-        dataService.saveData(coin.mapToModel())
+    private func saveData(_ coin: CoinModel) async {
+        debugPrint("CoinRepositoryImpl: \(#function) saveData: coin logo=\(String(describing: coin.logo))")
+        dataService.saveData(coin)
+    }
+    
+    private func updateLogo(_ id: String, logo: Data) async {
+        await dataService.updateLogo(by: id, logo: logo)
     }
 }

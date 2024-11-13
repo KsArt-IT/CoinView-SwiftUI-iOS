@@ -39,14 +39,14 @@ extension Coin {
         )
     }
     
-    public func mapToModel() -> CoinModel {
-        CoinModel(
-            id: self.id,
-            isActive: self.isActive,
-            name: self.name,
-            rank: self.rank,
-            symbol: self.symbol,
-            logo: self.logo == nil ? nil : CoinLogoModel(id: self.id, data: self.logo!)
-        )
-    }
+//    public func mapToModel() -> CoinModel {
+//        CoinModel(
+//            id: self.id,
+//            isActive: self.isActive,
+//            name: self.name,
+//            rank: self.rank,
+//            symbol: self.symbol,
+//            logo: self.logo == nil ? nil : CoinLogoModel(id: self.id, data: self.logo!)
+//        )
+//    }
 }

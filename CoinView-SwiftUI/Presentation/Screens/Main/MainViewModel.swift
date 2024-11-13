@@ -60,11 +60,6 @@ final class MainViewModel: ObservableObject {
     
     // MARK: - Checking the need for additional loading
     public func loadMoreItems() {
-        // если не было загружено, то сначало загрузим
-        if !isLoaded {
-//            fetchData()
-            return
-        }
         guard isMoreDataAvailable, taskLoading == nil else { return }
         
         print("MainViewModel: \(#function)")
@@ -77,7 +72,7 @@ final class MainViewModel: ObservableObject {
         }
     }
     
-    private func preloadList(_ count: Int = 3) async {
+    private func preloadList(_ count: Int = 10) async {
         let index = self.list.endIndex
         print("MainViewModel: \(#function) get logo: index=\(index), count=\(count)")
         let result = await repository?.fetchCoins(index: index, count: count)

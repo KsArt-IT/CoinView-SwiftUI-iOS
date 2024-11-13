@@ -17,8 +17,9 @@ protocol CoinDataService: AnyObject {
     
     func fetchData() -> [CoinModel]?
     func fetchData(index: Int, count: Int) -> [CoinModel]?
-    
+    func updateLogo(by id: String, logo: Data) async
+
     func fetchData(by id: String) -> CoinDetailModel?
     
-    func fetchLogo(by id: String) -> CoinLogoModel?
+    func fetchLogo(by id: String) async -> CoinLogoModel?
 }
