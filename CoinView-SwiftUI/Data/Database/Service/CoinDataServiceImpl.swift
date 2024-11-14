@@ -73,8 +73,8 @@ final class CoinDataServiceImpl: @preconcurrency CoinDataService {
         do {
             let coinFetch = FetchDescriptor<CoinModel>(
                 predicate: #Predicate {
-                    $0.name.contains(filter) ||
-                    $0.symbol.contains(filter)
+                    $0.name.localizedStandardContains(filter) ||
+                    $0.symbol.localizedStandardContains(filter)
                 },
                 sortBy: [SortDescriptor(\.index)]
             )

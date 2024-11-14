@@ -14,4 +14,8 @@ struct CoinView_SwiftUIApp: App {
             ContentView()
         }
     }
+    
+    init() {
+        debugPrint(URL.applicationSupportDirectory.path(percentEncoded: false))
+    }
 }

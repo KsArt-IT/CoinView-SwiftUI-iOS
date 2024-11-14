@@ -46,7 +46,7 @@ struct MainScreen: View {
         // MARK: - Navigation
         .navigationTitle("Coins")
         .navigationBarTitleDisplayMode(.inline)
-        .searchable(text: $viewModel.search)
+        .searchable(text: $viewModel.search, prompt: Text("Filter on name or symbol"))
         .autocapitalization(.none)
         .background {
             BackgroundView(main: true)
