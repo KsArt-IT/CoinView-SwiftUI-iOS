@@ -13,7 +13,7 @@ final class MainViewModel: ObservableObject {
     // список, который отображается
     @Published var list: [Coin] = []
     // начальная загрузка
-    private var isLoaded = false
+    var isInitialLoading = true
     private var taskLoading: Task<(), Never>?
     
     // для поиска
@@ -29,7 +29,7 @@ final class MainViewModel: ObservableObject {
     private var count: Int = 0
     @Published var countLoaded: Int = 0
     public var isMoreDataAvailable: Bool {
-        count > list.count || !isLoaded
+        count > list.count || isInitialLoading
     }
     
     public var progressLoaded: Double {
@@ -60,7 +60,7 @@ final class MainViewModel: ObservableObject {
             case .success(let count):
                 print("MainViewModel: count = \(count)")
                 self?.count = count
-                self?.isLoaded = true
+                self?.isInitialLoading = false
                 
                 await self?.setReloadingState(.reload)
             case .failure(let error):
@@ -74,6 +74,11 @@ final class MainViewModel: ObservableObject {
     
     // MARK: - Checking the need for additional loading
     public func loadMoreItems() {
+        // если не было первоначальной загрузки, загрузить
+        guard !isInitialLoading else {
+            preloadData()
+            return
+        }
         guard isMoreDataAvailable, taskLoading == nil else { return }
         
         print("MainViewModel: \(#function)")
@@ -123,6 +128,8 @@ final class MainViewModel: ObservableObject {
     
     // MARK: - Search
     private func updateSearch() {
+        guard !isInitialLoading else { return }
+        
         taskSearch?.cancel()
         
         self.taskSearch = Task(priority: .utility) { [weak self] in

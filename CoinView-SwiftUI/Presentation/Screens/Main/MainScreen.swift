@@ -25,7 +25,7 @@ struct MainScreen: View {
                 }
                 // покажем загрузку и догрузим или релоад
                 if viewModel.search.isEmpty && viewModel.isMoreDataAvailable {
-                    ReloadingRowView(state: $viewModel.reloadingState) {
+                    ReloadingRowView(state: $viewModel.reloadingState, first: viewModel.isInitialLoading) {
                         viewModel.loadMoreItems()
                     }
                 }

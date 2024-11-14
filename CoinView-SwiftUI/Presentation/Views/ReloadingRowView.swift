@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ReloadingRowView: View {
     @Binding var state: PaginationState
+    var first: Bool
     let reloading: () -> Void
     
     var body: some View {
@@ -23,12 +24,17 @@ struct ReloadingRowView: View {
                         reloading()
                     }
             case .loading:
-                ProgressView()
-                    .progressViewStyle(.circular)
-                    .frame(maxWidth: .infinity, idealHeight: 50, maxHeight: 100)
-                    .padding(8)
-                    .background(Color.backgroundRow)
-                    .cornerRadius(Constants.cornerRadius)
+                VStack {
+                    if first {
+                        Text("Initial loading, please wait!")
+                    }
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                }
+                .frame(maxWidth: .infinity, idealHeight: 50, maxHeight: 100)
+                .padding(8)
+                .background(Color.backgroundRow)
+                .cornerRadius(Constants.cornerRadius)
             case .error(let message):
                 HStack {
                     Text(message)
@@ -57,5 +63,9 @@ struct ReloadingRowView: View {
 }
 
 #Preview {
-    ReloadingRowView(state: .constant(.error(message: "Error"))) {}
+    VStack {
+        List {
+            ReloadingRowView(state: .constant(.loading), first: true) {}
+        }
+    }
 }
