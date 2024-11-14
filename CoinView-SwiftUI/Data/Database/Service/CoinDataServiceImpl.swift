@@ -112,13 +112,14 @@ final class CoinDataServiceImpl: @preconcurrency CoinDataService {
     }
     
     func updateLogo(by id: String, logo: Data) async {
-        print("CoinDataServiceImpl: \(#function)")
         let coinFetch = FetchDescriptor<CoinModel>(predicate: #Predicate { coin in
             coin.id == id
         })
         let coins = try? context.fetch(coinFetch)
         if let coin = coins?.first {
             coin.logo = CoinLogoModel(id: id, data: logo)
+            context.insert(coin)
+            print("CoinDataServiceImpl: \(#function) logo: \(coin.logo?.data)")
             save(true)
         }
     }
@@ -173,9 +174,10 @@ final class CoinDataServiceImpl: @preconcurrency CoinDataService {
         do {
             if force || context.hasChanges {
                 try context.save()
+                print("CoinDataServiceImpl: \(#function)")
             }
         } catch {
-            print("CoinDataServiceImpl: save error: \(error)")
+            print("CoinDataServiceImpl: \(#function) error: \(error)")
         }
     }
     

@@ -47,16 +47,4 @@ extension CoinModel {
         )
     }
     
-    public func copy(logo: Data? = nil) -> CoinModel {
-        CoinModel(
-            index: self.index,
-            id: self.id,
-            isActive: self.isActive,
-            name: self.name,
-            rank: self.rank,
-            symbol: self.symbol,
-            logo: logo == nil ? nil : CoinLogoModel(id: self.id, data: logo!)
-        )
-    }
-    
 }

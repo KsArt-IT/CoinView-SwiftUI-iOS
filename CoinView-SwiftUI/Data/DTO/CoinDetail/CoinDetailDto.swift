@@ -36,24 +36,6 @@ struct CoinDetailDto: Decodable {
 
 extension CoinDetailDto {
 
-    func mapToDomain(_ logo: Data? = nil) -> CoinDetail {
-        CoinDetail(
-            id: self.id,
-            name: self.name,
-            symbol: self.symbol,
-            rank: self.rank,
-            isNew: self.isNew,
-            isActive: self.isActive,
-            logo: logo,
-            description: self.description,
-            firstDataAt: self.firstDataAt ?? "",
-            lastDataAt: self.lastDataAt ?? "",
-            message: self.message ?? "",
-            tags: self.tags.map { $0.name },
-            team: self.team.map { "\($0.name) - \($0.position)" }
-        )
-    }
-
     func mapToModel(_ logo: Data? = nil) -> CoinDetailModel {
         CoinDetailModel(
             id: self.id,
