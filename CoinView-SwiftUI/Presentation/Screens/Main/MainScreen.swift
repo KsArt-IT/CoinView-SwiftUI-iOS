@@ -31,22 +31,38 @@ struct MainScreen: View {
                 }
             }
             .listStyle(.plain)
-            .padding(.bottom, 24)
-            HStack {
-                Text(viewModel.countLoaded.description)
-                    .frame(width: 60)
+            .padding(.bottom, 32)
+            if !viewModel.isInitialLoading {
+                HStack {
+                    VStack {
+                        Text(viewModel.countLoaded.description)
+                        Text(viewModel.count.description)
+                    }
+                    .font(.caption)
                     .padding(.horizontal)
-                ProgressView(value: viewModel.progressLoaded)
-                    .progressViewStyle(LinearProgressViewStyle())
-                    .padding(.trailing)
-                    .frame(maxWidth: .infinity)
+                    ProgressView(value: viewModel.progressLoaded)
+                        .progressViewStyle(.linear)
+                        .padding(.trailing)
+                        .frame(maxWidth: .infinity)
+                }
+                .frame(maxHeight: .infinity, alignment: .bottom)
             }
-            .frame(maxHeight: .infinity, alignment: .bottom)
         }
         // MARK: - Navigation
         .navigationTitle("Coins")
         .navigationBarTitleDisplayMode(.inline)
-        .searchable(text: $viewModel.search, prompt: Text("Filter on name or symbol"))
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    viewModel.isSearchVisible.toggle()
+                } label: {
+                    Image(systemName: "magnifyingglass")
+                }
+            }
+        }
+        .if(!viewModel.isInitialLoading && viewModel.isSearchVisible) {
+            $0.searchable(text: $viewModel.search, prompt: Text("Filter on name or symbol"))
+        }
         .autocapitalization(.none)
         .background {
             BackgroundView(main: true)

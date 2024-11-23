@@ -17,6 +17,7 @@ final class MainViewModel: ObservableObject {
     private var taskLoading: Task<(), Never>?
     
     // для поиска
+    @Published var isSearchVisible = false
     @Published var search = "" {
         didSet {
             updateSearch()
@@ -26,7 +27,7 @@ final class MainViewModel: ObservableObject {
     private var taskSearch: Task<(), Never>?
     
     // весь список для дозагрузки и пагинации
-    private var count: Int = 0
+    @Published var count: Int = 0
     @Published var countLoaded: Int = 0
     public var isMoreDataAvailable: Bool {
         count > list.count || isInitialLoading
@@ -58,9 +59,7 @@ final class MainViewModel: ObservableObject {
             
             switch result {
             case .success(let count):
-                print("MainViewModel: count = \(count)")
-                self?.count = count
-                self?.isInitialLoading = false
+                await self?.setCount(count)
                 
                 await self?.setReloadingState(.reload)
             case .failure(let error):
@@ -112,6 +111,14 @@ final class MainViewModel: ObservableObject {
         } else {
             self.reloadingState = state
         }
+    }
+    
+    // MARK: - Set Count
+    @MainActor
+    private func setCount(_ count: Int) {
+        print("MainViewModel: count = \(count)")
+        self.count = count
+        self.isInitialLoading = false
     }
     
     // MARK: - Show error
