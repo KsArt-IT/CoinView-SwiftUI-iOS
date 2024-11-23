@@ -19,7 +19,7 @@ struct SplashScreen: View {
                 .resizable()
                 .scaledToFit()
                 .scaleEffect(scale, anchor: .center)
-            Text("Coin View")
+            Text(Constants.appName)
                 .font(.title)
                 .foregroundStyle(Color.blue)
                 .opacity(scale > 1 ? 0 : 1)
