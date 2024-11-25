@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct MainScreen: View {
-    @StateObject var viewModel = MainViewModel()
+    @StateObject private var viewModel = MainViewModel()
+    @Binding var appTheme: AppTheme
     @Binding var selection: String?
     
     var body: some View {
@@ -59,6 +60,9 @@ struct MainScreen: View {
                     Image(systemName: "magnifyingglass")
                 }
             }
+            ToolbarItem(placement: .primaryAction) {
+                ToolbarMenuView(appTheme: $appTheme)
+            }
         }
         .if(!viewModel.isInitialLoading && viewModel.isSearchVisible) {
             $0.searchable(text: $viewModel.search, prompt: Text("Filter on name or symbol"))
@@ -72,6 +76,6 @@ struct MainScreen: View {
 
 #Preview {
     NavigationView {
-        MainScreen(selection: .constant(nil))
+        MainScreen(appTheme: .constant(AppTheme.light), selection: .constant(nil))
     }
 }
