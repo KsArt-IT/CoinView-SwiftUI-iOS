@@ -12,6 +12,7 @@ import SwiftData
 final class CoinLogoModel {
     @Attribute(.unique)
     var id: String?
+    @Attribute(.externalStorage)
     var data: Data?
     
     init(id: String, data: Data) {
